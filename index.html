@@ -1,0 +1,193 @@
+import readline from "readline";
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+let cart = [];
+
+function menu() {
+  console.log(`
+====================================
+         🛒 SHOPEE CART
+====================================
+1 - Adicionar produto
+2 - Remover produto
+3 - Alterar quantidade
+4 - Ver carrinho
+5 - Limpar carrinho
+6 - Finalizar compra
+0 - Sair
+====================================
+`);
+
+  rl.question("Escolha uma opção: ", (option) => {
+    switch (option) {
+      case "1":
+        addProduct();
+        break;
+      case "2":
+        removeProduct();
+        break;
+      case "3":
+        updateQuantity();
+        break;
+      case "4":
+        showCart();
+        menu();
+        break;
+      case "5":
+        clearCart();
+        menu();
+        break;
+      case "6":
+        checkout();
+        break;
+      case "0":
+        console.log("👋 Até logo!");
+        rl.close();
+        break;
+      default:
+        console.log("❌ Opção inválida!");
+        menu();
+    }
+  });
+}
+
+function addProduct() {
+  rl.question("ID: ", (id) => {
+    rl.question("Nome: ", (name) => {
+      rl.question("Preço: ", (price) => {
+        rl.question("Quantidade: ", (quantity) => {
+          const existing = cart.find(
+            (item) => item.id === Number(id)
+          );
+
+          if (existing) {
+            existing.quantity += Number(quantity);
+            console.log("✅ Quantidade atualizada!");
+          } else {
+            cart.push({
+              id: Number(id),
+              name,
+              price: Number(price),
+              quantity: Number(quantity),
+            });
+
+            console.log("✅ Produto adicionado!");
+          }
+
+          menu();
+        });
+      });
+    });
+  });
+}
+
+function removeProduct() {
+  rl.question("ID do produto: ", (id) => {
+    const index = cart.findIndex(
+      (item) => item.id === Number(id)
+    );
+
+    if (index === -1) {
+      console.log("❌ Produto não encontrado!");
+    } else {
+      console.log(`🗑️ ${cart[index].name} removido.`);
+      cart.splice(index, 1);
+    }
+
+    menu();
+  });
+}
+
+function updateQuantity() {
+  rl.question("ID do produto: ", (id) => {
+    const product = cart.find(
+      (item) => item.id === Number(id)
+    );
+
+    if (!product) {
+      console.log("❌ Produto não encontrado!");
+      return menu();
+    }
+
+    rl.question("Nova quantidade: ", (quantity) => {
+      const qty = Number(quantity);
+
+      if (qty <= 0) {
+        cart = cart.filter(
+          (item) => item.id !== Number(id)
+        );
+        console.log("🗑️ Produto removido.");
+      } else {
+        product.quantity = qty;
+        console.log("🔄 Quantidade atualizada.");
+      }
+
+      menu();
+    });
+  });
+}
+
+function showCart() {
+  console.log("\n🛒 SEU CARRINHO\n");
+
+  if (cart.length === 0) {
+    console.log("Carrinho vazio.\n");
+    return;
+  }
+
+  let total = 0;
+  let totalItems = 0;
+
+  cart.forEach((item) => {
+    const subtotal = item.price * item.quantity;
+
+    total += subtotal;
+    totalItems += item.quantity;
+
+    console.log(`
+ID: ${item.id}
+Produto: ${item.name}
+Preço: R$ ${item.price.toFixed(2)}
+Quantidade: ${item.quantity}
+Subtotal: R$ ${subtotal.toFixed(2)}
+-------------------------
+`);
+  });
+
+  console.log(`📦 Total de itens: ${totalItems}`);
+  console.log(`💰 Total: R$ ${total.toFixed(2)}\n`);
+}
+
+function clearCart() {
+  cart = [];
+  console.log("🧹 Carrinho limpo!");
+}
+
+function checkout() {
+  if (cart.length === 0) {
+    console.log("❌ Carrinho vazio!");
+    return rl.close();
+  }
+
+  showCart();
+
+  const total = cart.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+
+  console.log(`
+====================================
+✅ PEDIDO FINALIZADO
+💰 Total Pago: R$ ${total.toFixed(2)}
+====================================
+`);
+
+  rl.close();
+}
+
+menu();
